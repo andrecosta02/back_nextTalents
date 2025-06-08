@@ -1,0 +1,83 @@
+[
+    {
+      "code": "ERR001",
+      "description_en": "Invalid request parameters.",
+      "description_pt": "Parâmetros da requisição inválidos."
+    },
+    {
+      "code": "ERR002",
+      "description_en": "Missing required fields.",
+      "description_pt": "Campos obrigatórios não informados."
+    },
+    {
+      "code": "ERR003",
+      "description_en": "User not found.",
+      "description_pt": "Usuário não encontrado."
+    },
+    {
+      "code": "ERR004",
+      "description_en": "Incorrect password.",
+      "description_pt": "Senha incorreta."
+    },
+    {
+      "code": "ERR005",
+      "description_en": "Email already registered.",
+      "description_pt": "E-mail já cadastrado."
+    },
+    {
+      "code": "ERR006",
+      "description_en": "Course not found.",
+      "description_pt": "Curso não encontrado."
+    },
+    {
+      "code": "ERR007",
+      "description_en": "Certificate not found.",
+      "description_pt": "Certificado não encontrado."
+    },
+    {
+      "code": "ERR008",
+      "description_en": "Vacancy not found.",
+      "description_pt": "Vaga não encontrada."
+    },
+    {
+      "code": "ERR009",
+      "description_en": "Already registered for this vacancy.",
+      "description_pt": "Já inscrito nesta vaga."
+    },
+    {
+      "code": "ERR010",
+      "description_en": "Unauthorized access.",
+      "description_pt": "Acesso não autorizado."
+    },
+    {
+      "code": "ERR011",
+      "description_en": "Invalid authentication token.",
+      "description_pt": "Token de autenticação inválido."
+    },
+    {
+      "code": "ERR012",
+      "description_en": "Internal server error.",
+      "description_pt": "Erro interno no servidor."
+    },
+    {
+      "code": "ERR013",
+      "description_en": "Resource conflict. Cannot complete the operation.",
+      "description_pt": "Conflito de recurso. Não foi possível concluir a operação."
+    },
+    {
+      "code": "ERR014",
+      "description_en": "Method not allowed.",
+      "description_pt": "Método não permitido."
+    },
+    {
+      "code": "ERR015",
+      "description_en": "Unsupported media type.",
+      "description_pt": "Tipo de mídia não suportado."
+    },
+    {
+      "code": "ERR016",
+      "description_en": "Request timeout.",
+      "description_pt": "Tempo de requisição excedido."
+    }
+  ]
+  
