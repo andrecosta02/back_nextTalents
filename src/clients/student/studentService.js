@@ -29,7 +29,7 @@ module.exports = {
     getActiveStudents: () => {
         return new Promise((resolve, reject) => {
             query = `
-                SELECT id, name, last_name, email, birth, cep, city, description
+                SELECT id, name, last_name, cpf, email, birth, cep, city, description
                 FROM student
                 WHERE is_active = 1
             `;
