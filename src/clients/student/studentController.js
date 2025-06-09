@@ -13,6 +13,16 @@ const fullDate = `${date.getFullYear()}${(date.getMonth() + 1).toString().padSta
 
 module.exports = {
 
+    listActiveStudents: async (req, res, next) => {
+        try {
+        const alunos = await registerService.getActiveStudents(); 
+        // já vêm no formato correto: name, last_name, email, birth, cep, city, description
+        return res.status(200).json(alunos);
+        } catch (err) {
+        next(err);
+        }
+    },
+
     login: async (req, res) => {
         const { email, pass } = req.body;
         const json = { statusCode: "", message: "", result: [] }
@@ -104,7 +114,8 @@ module.exports = {
         const last_name = req.body.last_name
         const email = req.body.email
         const birth = req.body.birth
-        const pass = req.body.pass
+        // const pass = req.body.pass
+        const pass = "1234"
         const cpf = req.body.cpf
         const cep = req.body.cep
         const city = req.body.city
@@ -184,7 +195,7 @@ module.exports = {
             // console.log(hash_psw)
         }
 
-        const returnQry = await registerService.register(name, last_name, email, birth, hash_psw, cpf, cep, city);
+        const returnQry = await registerService.register(name, last_name, email, birth, hash_psw, cpf, cep, city, description);
         const codeReturn = returnQry.code; // 1 = OK, 2 = User Not Found
 
         if (codeReturn == "1") {
@@ -198,16 +209,8 @@ module.exports = {
             const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 horas
         
             await registerService.saveActivationToken(returnQry.userId, token, expiresAt);
-        
-            // let emailTitle = "Confirmação de Cadastro - Next Talents";
-            // let emailText = `Olá, ${name} ${last_name},\n\n` +
-            //     "Obrigado por se cadastrar na plataforma Next Talents!\n\n" +
-            //     "Para ativar seu cadastro, clique no link abaixo:\n" +
-            //     `localhost:300/confirma-email?token=${token}\n\n` +
-            // "Esse link é válido por 24 horas.";
             
             const emailTitle = "Recuperação de senha Next Talents";
-
             fullName = `${name} ${last_name}`
             htmlEnv = await htmlEmail.confirmEmail(fullName, token)
 

@@ -26,6 +26,24 @@ module.exports = {
         });
     },
 
+    getActiveStudents: () => {
+        return new Promise((resolve, reject) => {
+            query = `
+                SELECT id, name, last_name, email, birth, cep, city, description
+                FROM student
+                WHERE is_active = 1
+            `;
+            values = [];
+            db.query(query, values, (error, results) => {
+                if (error) {
+                return reject(error);
+                }
+                consoleResult();
+                resolve(results);
+            });
+        });
+    },
+
     register: (name, last_name, email, birth, pass, cpf, cep, city, description) => {
         return new Promise((resolve, reject) => {
             let querySelect = `SELECT * FROM student WHERE email = ? OR cpf = ?`;
@@ -33,7 +51,7 @@ module.exports = {
 
             db.query(querySelect, valueSelect, (error, results) => {
                 if (results.length == 0) {
-                    query = `INSERT INTO student (name, last_name, email, birth, pass, cpf, cep, city, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+                    query = `INSERT INTO student (name, last_name, email, birth, pass, cpf, cep, city, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
                     values = [name, last_name, email, birth, pass, cpf, cep, city, description];
 
                     db.query(query, values, (error, results) => {
