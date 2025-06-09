@@ -26,15 +26,15 @@ module.exports = {
         });
     },
 
-    register: (name, last_name, email, birth, pass, cpf, cep, city) => {
+    register: (name, last_name, email, birth, pass, cpf, cep, city, description) => {
         return new Promise((resolve, reject) => {
             let querySelect = `SELECT * FROM student WHERE email = ? OR cpf = ?`;
             let valueSelect = [email, cpf];
 
             db.query(querySelect, valueSelect, (error, results) => {
                 if (results.length == 0) {
-                    query = `INSERT INTO student (name, last_name, email, birth, pass, cpf, cep, city) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
-                    values = [name, last_name, email, birth, pass, cpf, cep, city];
+                    query = `INSERT INTO student (name, last_name, email, birth, pass, cpf, cep, city, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+                    values = [name, last_name, email, birth, pass, cpf, cep, city, description];
 
                     db.query(query, values, (error, results) => {
                         if (error) {

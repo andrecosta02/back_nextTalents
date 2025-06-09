@@ -108,8 +108,9 @@ module.exports = {
         const cpf = req.body.cpf
         const cep = req.body.cep
         const city = req.body.city
+        const description = req.body.description
 
-        json.result = [name, last_name, email, birth, pass, cpf, cep, city]
+        json.result = [name, last_name, email, birth, pass, cpf, cep, city, description]
 
         const registerValidation = [
             body('name')
@@ -139,11 +140,11 @@ module.exports = {
                     return true;
                 }),
         
-            body('pass')
-                .notEmpty().withMessage('A senha não pode estar vazia')
-                .isString().withMessage('A senha deve ser uma string')
-                .isLength({ min: 8 }).withMessage('A senha deve ter no mínimo 8 caracteres')
-                .matches(/[!@#$%^&*(),.?":{}|<>]/).withMessage('A senha deve conter ao menos um caractere especial'),
+            // body('pass')
+            //     .notEmpty().withMessage('A senha não pode estar vazia')
+            //     .isString().withMessage('A senha deve ser uma string')
+            //     .isLength({ min: 8 }).withMessage('A senha deve ter no mínimo 8 caracteres')
+            //     .matches(/[!@#$%^&*(),.?":{}|<>]/).withMessage('A senha deve conter ao menos um caractere especial'),
         
             body('cpf')
                 .notEmpty().withMessage('O CPF não pode estar vazio')
@@ -160,7 +161,12 @@ module.exports = {
             body('city')
                 .notEmpty().withMessage('A cidade é obrigatória')
                 .isLength({ min: 2, max: 100 }).withMessage('A cidade deve ter entre 2 e 100 caracteres')
-                .matches(/^[a-zA-Z\s]+$/).withMessage('A cidade deve conter apenas letras e espaços')
+                .matches(/^[a-zA-Z\s]+$/).withMessage('A cidade deve conter apenas letras e espaços'),
+
+            body('description')
+                .notEmpty().withMessage('A descrição é obrigatória')
+                .isLength({ min: 2, max: 256 }).withMessage('A descrição deve ter entre 2 e 256 caracteres')
+                .matches(/^[a-zA-Z\s]+$/).withMessage('A descrição deve conter apenas letras e espaços')
         ];
         
 
@@ -222,7 +228,7 @@ module.exports = {
 
     update: async (req, res) => {
         const userId = req.user.id; // Pegando o id do usuário autenticado via middleware
-        const allowedFields = ["name", "last_name", "email", "cep", "city", "notification_email", "notification_vacancies", "notification_course", "darkmode"];
+        const allowedFields = ["name", "last_name", "email", "cep", "city", "description", "notification_email", "notification_vacancies", "notification_course", "darkmode"];
         const updates = {};
 
         allowedFields.forEach(field => {
