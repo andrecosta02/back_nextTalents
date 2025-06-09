@@ -47,6 +47,6 @@ jobs:
             docker rm back-nexttalents || true
             docker pull ${{ secrets.DOCKER_USERNAME }}/back-nexttalents
             docker run --restart=always -d --name back-nexttalents -p 8080:8080 ${{ secrets.DOCKER_USERNAME }}/back-nexttalents
-            docker cp nextTalents/back/.variable.env back-nexttalents:/home/node/app
+            docker cp nextTalents/back/variable.env back-nexttalents:/home/node/app
             docker cp nextTalents/back/.env back-nexttalents:/home/node/app
 
