@@ -1,253 +1,225 @@
-const registerService = require("./enterpriseService")
-const { validationResult } = require('express-validator');
-const { body, param } = require('express-validator');
+const ieService = require("./ieService");
+const { validationResult, body } = require('express-validator');
+const clientEmail = require("../../clientEmail.js");
+const htmlEmail = require("./htmlEmail.js");
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
-
-const date = new Date()
-const fullDate = `${date.getFullYear()}${(date.getMonth() + 1).toString().padStart(2, '0')}${date.getDate().toString().padStart(2, '0')}`
+const jwt = require('jsonwebtoken');
+const SECRET = "weexpedition";
 
 module.exports = {
+  // LOGIN
+  login: async (req, res) => {
+    const { email, pass } = req.body;
+    const json = { statusCode: "", message: "", result: [] };
 
-    // listAll: async (req, res) => {
-    //     let amount = 0
-    //     let json = {statusCode:"", message:"", amount:"", result:[]}
-    //     let user = await registerService.listAll()
-
-    //     for(let i in user) {
-    //         res.statusCode = 200
-
-    //         json.result.push({
-    //             userId: user[i].id,
-    //             userName: user[i].name,
-    //             userEmail: user[i].last_name,
-    //             userAddress: user[i].hash_psw,
-    //             userCpf: user[i].gender,
-    //             userCpf: user[i].birth,
-    //             userCpf: user[i].cep,
-    //             userCpf: user[i].city,
-    //             userCpf: user[i].we_current,
-    //             userDate: user[i].date_time
-    //         })
-    //         amount++
-    //     }
-    //     json.amount = amount
-
-    //     res.json(json)
-    //     IpPublicQuery(req)
-    // },
-
-
-
-    // listOne: async (req, res) => {
-    //     let json = {statusCode:"", message:"", result:[]}
-
-    //     let userId = req.params.userId
-    //     let user = await registerService.listOne(userId)
-
-    //     if(user) { 
-    //         res.statusCode = 200
-
-    //         json.result.push({
-    //             userId: user.id,
-    //             userName: user.name,
-    //             userEmail: user.last_name,
-    //             userAddress: user.hash_psw,
-    //             userCpf: user.gender,
-    //             userCpf: user.birth,
-    //             userCpf: user.cep,
-    //             userCpf: user.city,
-    //             userCpf: user.we_current,
-    //             userDate: user.date_time
-    //         })
-    //     }
-
-    //     res.json(json)
-    //     IpPublicQuery(req)
-    // },
-
-
-
-    register: async (req, res) => {
-        const json = { statusCode: "", message: "", result: [] }
-
-        let hash_psw = ""
-
-        const name = req.body.name
-        const last_name = req.body.last_name
-        const email = req.body.email
-        const birth = req.body.birth
-        const pass = req.body.pass
-        const cpf = req.body.cpf
-        const cep = req.body.cep
-        const city = req.body.city
-
-        json.result = [name, last_name, email, birth, pass, cpf, cep, city]
-
-        const registerValidation = [
-            body('name')
-                .notEmpty().withMessage('name cannot be empty')
-                .isString().withMessage('name must be a string')
-                .isLength({ min: 3, max: 60 }).withMessage('name must be between 3 and 60 characters'),
-
-            body('last_name')
-                .notEmpty().withMessage('last_name cannot be empty')
-                .isString().withMessage('last_name must be a string')
-                .isLength({ min: 3, max: 60 }).withMessage('last_name must be between 3 and 60 characters'),
-
-            body('email')
-                .notEmpty().withMessage('email cannot be empty')
-                .isString().withMessage('email must be a string')
-                .isEmail().withMessage('email must be a valid email address')
-                .isLength({ min: 3, max: 60 }).withMessage('email must be between 3 and 60 characters'),
-
-            body('birth')
-                .notEmpty().withMessage('birth cannot be empty')
-                .isString().withMessage('birth must be a string')
-                .matches(/^\d{8}$/).withMessage('birth must be in the format AAAAMMDD')
-                .custom((value) => {
-                    if (isAdult(value) < 18) {
-                        throw new Error('User must be at least 18 years old');
-                    }
-                    return true;
-                }),
-
-            body('pass')
-                .notEmpty().withMessage('pass cannot be empty')
-                .isString().withMessage('pass must be a string')
-                .isLength({ min: 8 }).withMessage('pass must be at least 8 characters long')
-                .matches(/[!@#$%^&*(),.?":{}|<>]/).withMessage('pass must contain at least one special character'),
-
-            body('cpf')
-                .notEmpty().withMessage('cpf cannot be empty')
-                .isString().withMessage('cpf must be a string')
-                .isLength({ min: 11, max: 11 }).withMessage('cpf must be 11 characters')
-                .matches(/^\d+$/).withMessage('CPF must contain only numbers'),
-
-            body('cep')
-                .notEmpty().withMessage('cep cannot be empty')
-                .isString().withMessage('cep must be a string')
-                .isLength({ min: 8, max: 8 }).withMessage('CEP must be exactly 8 characters long')
-                .matches(/^\d+$/).withMessage('CEP must contain only numbers'),
-
-            body('city')
-                .notEmpty().withMessage('City is required')
-                .isLength({ min: 2, max: 100 }).withMessage('City must be between 2 and 100 characters long')
-                .matches(/^[a-zA-Z\s]+$/).withMessage('City must contain only letters and spaces')
-        ];
-
-        await Promise.all(registerValidation.map(validation => validation.run(req)))
-
-        const errors = validationResult(req)
-
-        if (!errors.isEmpty()) {
-            res.status(422).json({ statusCode: 400, message: 'Erro de validação', errors: errors.array() })
-            return
-        } else {
-            hash_psw = await hashPassword(pass);
-            // console.log(hash_psw)
-        }
-
-
-        const returnQry = await registerService.register(name, last_name, email, birth, hash_psw, cpf, cep, city)
-        codeReturn = returnQry[0] // 1 = OK, 2 = User Not Fount
-
-        if (codeReturn == "1") {
-            res.status(201)
-            json.statusCode = 201
-            json.message = returnQry
-            json.result = ""
-        } else {
-            res.status(422)
-            json.statusCode = 422
-            json.message = returnQry
-            json.result = ""
-        }
-
-        res.json(json);
-        IpPublicQuery(req);
-    },
-
-
-
-    // update: async (req, res) => {
-    //     let json = {statusCode:"", message:"", result:[]}
-
-    //     let userId = req.params.userId
-    //     const name = req.body.userName;
-    //     const email = req.body.userEmail;
-    //     const address = req.body.userAddress;
-
-    //     const registerValidation = [
-    //         body('userName').isString().optional().withMessage('userName cannot be empty').isLength({ min: 3, max: 60 }).withMessage('userName must be between 3 and 60 characters'),
-    //         body('userEmail').isEmail().optional().withMessage('userEmail must be a valid email address').isLength({ min: 3, max: 60 }).withMessage('userEmail must be between 3 and 60 characters'),
-    //         body('userAddress').isString().optional().withMessage('userAddress must be a string').isLength({ min: 3, max: 60 }).withMessage('userAddress must be between 3 and 60 characters'),
-    //     ];
-
-    //     await Promise.all(registerValidation.map(validation => validation.run(req)))
-
-    //     const errors = validationResult(req)
-
-    //     if (!errors.isEmpty()) {
-    //         return res.status(422).json({ statusCode: 400, message: 'Erro de validação', errors: errors.array() })
-    //     }
-
-    //     if(userId && name || email || address){
-    //         await registerService.update(userId, name, email, address);
-    //         json.result = {
-    //             userId: userId,
-    //             userName: name,
-    //             userEmail: email,
-    //             userAddress: address,
-    //         }
-    //     } else {
-    //         json.message = "Campos não enviados"
-    //     }
-
-
-    //     res.json(json)
-    //     IpPublicQuery(req)
-    // },
-
-
-
-    // delete: async (req, res) => {
-    //     let json = {statusCode:"", message:"", result:[]}
-    //     let messageJson
-    //     let userId = req.params.userId;
-    //     await registerService.delete(userId);
-    //     messageJson = messageJson
-
-
-    //     json.message = messageJson
-
-    //     res.json(json)
-    //     IpPublicQuery(req)
-    // },
-
-
-}
-
-const isAdult = (value) => {
-    const today = new Date();
-    const birthDate = new Date(value.slice(0, 4), value.slice(4, 6) - 1, value.slice(6, 8));
-    const age = today.getFullYear() - birthDate.getFullYear();
-    const m = today.getMonth() - birthDate.getMonth();
-
-    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-        return age - 1;
+    if (!email || !pass) {
+      return res.status(400).json({
+        statusCode: 400,
+        message: "Email e senha são obrigatórios.",
+        errors: [{ msg: "Email e senha são obrigatórios." }]
+      });
     }
-    return age;
+
+    try {
+      const enterprise = await ieService.getUserByEmail(email);
+
+      if (!enterprise) {
+        return res.status(401).json({
+          statusCode: 401,
+          message: "E-mail ou senha inválidos.",
+          errors: [{ msg: "E-mail ou senha inválidos." }]
+        });
+      }
+
+      const passwordMatch = await bcrypt.compare(pass, enterprise.pass);
+      if (!passwordMatch) {
+        return res.status(401).json({
+          statusCode: 401,
+          message: "E-mail ou senha inválidos.",
+          errors: [{ msg: "E-mail ou senha inválidos." }]
+        });
+      }
+
+      if (!enterprise.is_active) {
+        return res.status(403).json({
+          statusCode: 403,
+          message: "Conta não ativada. Verifique seu e-mail para confirmar o cadastro.",
+          errors: [{ msg: "Conta não ativada. Verifique seu e-mail para confirmar o cadastro." }]
+        });
+      }
+
+      const token = jwt.sign(
+        { id: enterprise.id, name: enterprise.nome, type: "enterprise" },
+        SECRET,
+        { expiresIn: "2h" }
+      );
+
+      return res.status(200).json({
+        message: "Login realizado com sucesso!",
+        token
+      });
+    } catch (error) {
+      console.error("Erro no login:", error);
+      return res.status(500).json({ message: "Erro interno no servidor." });
+    }
+  },
+
+  // REGISTER
+  register: async (req, res) => {
+    const json = { statusCode: "", message: "", result: [] };
+    let hash_psw = "";
+
+    const nome = req.body.nome;
+    const unit = req.body.unit;
+    const email = req.body.email;
+    const pass = req.body.pass;
+    const cnpj = req.body.cnpj;
+
+    json.result = [nome, unit, email, pass, cnpj];
+
+    // Validação dos campos
+    const registerValidation = [
+      body('nome')
+        .notEmpty().withMessage('O nome é obrigatório')
+        .isString().withMessage('O nome deve ser uma string')
+        .isLength({ min: 3, max: 100 }).withMessage('O nome deve ter entre 3 e 100 caracteres'),
+
+      body('unit')
+        .optional()
+        .isString().withMessage('A unidade deve ser uma string'),
+
+      body('email')
+        .notEmpty().withMessage('O e-mail é obrigatório')
+        .isEmail().withMessage('Formato de e-mail inválido'),
+
+      body('pass')
+        .notEmpty().withMessage('A senha é obrigatória')
+        .isLength({ min: 8 }).withMessage('A senha deve ter pelo menos 8 caracteres'),
+
+      body('cnpj')
+        .notEmpty().withMessage('O CNPJ é obrigatório')
+        .isLength({ min: 14, max: 14 }).withMessage('O cnpj deve conter 14 dígitos')
+        .matches(/^[0-9]+$/).withMessage('O cnpj deve conter apenas números')
+    ];
+
+    await Promise.all(registerValidation.map(validation => validation.run(req)));
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(422).json({
+        statusCode: 422,
+        message: 'Erro de validação',
+        errors: errors.array()
+      });
+    }
+
+    hash_psw = await bcrypt.hash(pass, saltRounds);
+    const returnQry = await ieService.register(nome, unit, email, hash_psw, cnpj);
+    const codeReturn = returnQry.code;
+
+    if (codeReturn === "1") {
+      json.statusCode = 201;
+      json.message = returnQry.message;
+      json.result = returnQry.description;
+
+      const token = jwt.sign(
+        { id: returnQry.userId, type: "enterprise" },
+        SECRET,
+        { expiresIn: "24h" }
+      );
+      const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+      await ieService.saveActivationToken(returnQry.userId, token, expiresAt);
+
+      const emailTitle = "Confirmação de Cadastro - Next Talents";
+      const htmlEnv = await htmlEmail.confirmEmail(nome, token);
+      await clientEmail.envEmail(email, emailTitle, "", htmlEnv);
+
+      return res.status(201).json(json);
+    } else {
+      return res.status(422).json({
+        statusCode: 422,
+        message: returnQry[1],
+        result: "",
+        errors: [{ msg: returnQry[1] }]
+      });
+    }
+  },
+
+  // UPDATE IE
+  update: async (req, res) => {
+    const ieId = req.user.id;
+    const allowedFields = ["nome", "unit", "email", "cnpj", "notification_email", "darkmode", "is_active"];
+    const updates = {};
+    allowedFields.forEach(field => {
+      if (req.body[field] !== undefined) {
+        updates[field] = req.body[field];
+      }
+    });
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({ message: "Nenhum campo válido para atualizar." });
+    }
+    try {
+      const result = await ieService.updateIeById(ieId, updates);
+      return res.status(200).json({ message: "Dados atualizados com sucesso!", result });
+    } catch (error) {
+      console.error("Erro ao atualizar dados:", error);
+      return res.status(500).json({ message: "Erro interno no servidor." });
+    }
+  },
+
+  // FORGOT PASSWORD
+  forgotPass: async (req, res) => {
+    const { email } = req.body;
+    const enterprise = await ieService.getUserByEmail(email);
+    if (!enterprise) {
+      return res.status(200).json({ message: "If this email exists, a reset link has been sent." });
+    }
+    const token = jwt.sign({ id: enterprise.id, type: 'enterprise' }, SECRET, { expiresIn: '1h' });
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
+    await ieService.saveResetToken(enterprise.id, token, expiresAt);
+    const emailTitle = "Recuperação de senha Next Talents";
+    const htmlEnv = await htmlEmail.resetPass(enterprise.nome, token);
+    await clientEmail.envEmail(email, emailTitle, '', htmlEnv);
+    return res.status(200).json({ message: "If this email exists, a reset link has been sent." });
+  },
+
+  // RESET PASSWORD
+  resetPass: async (req, res) => {
+    const { token, newPassword } = req.body;
+    try {
+      const decoded = jwt.verify(token, SECRET);
+      const tokenData = await ieService.findResetToken(token);
+      if (!tokenData) {
+        return res.status(400).json({ message: "Invalid or expired token." });
+      }
+      const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+      await ieService.updatePassword(tokenData.user_id, hashedPassword);
+      await ieService.markTokenAsUsed(tokenData.id);
+      return res.status(200).json({ message: "Password updated successfully!" });
+    } catch (error) {
+      return res.status(400).json({ message: "Invalid or expired token." });
+    }
+  },
+
+  // CONFIRM EMAIL
+  confirmEmail: async (req, res) => {
+    const { token } = req.body;
+    if (!token) {
+      return res.status(400).json({ message: "Token não fornecido." });
+    }
+    try {
+      const decoded = jwt.verify(token, SECRET);
+      const tokenData = await ieService.findActivationToken(token);
+      if (!tokenData) {
+        return res.status(400).json({ message: "Token inválido ou expirado." });
+      }
+      await ieService.activateIeById(tokenData.user_id);
+      await ieService.markActivationTokenAsUsed(tokenData.id);
+      return res.status(200).json({ message: "Cadastro ativado com sucesso!" });
+    } catch (error) {
+      console.error("Erro na ativação de cadastro:", error);
+      return res.status(400).json({ message: "Token inválido ou expirado." });
+    }
+  }
 };
-
-function IpPublicQuery(req) {
-    console.log(` - ${req.method}`)
-    console.log(` - ${req.baseUrl}${req.url}`)
-    console.log(` - ${req.connection.remoteAddress} } \n`)
-}
-
-
-
-function hashPassword(password) {
-    return bcrypt.hash(password, saltRounds);
-}

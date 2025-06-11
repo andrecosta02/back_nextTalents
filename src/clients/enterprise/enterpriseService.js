@@ -1,162 +1,223 @@
-const db = require("../../db.js")
-let query = ""
-let values = ""
-let returnQry = []
+const db = require("../../db.js");
+
+/**
+ * Log de queries com timestamp em horário de Brasília
+ */
+function consoleResult(query, values) {
+  const date = new Date();
+  const brasilTime = date.toLocaleString("pt-BR", { timeZone: "America/Recife" });
+  console.log("Consult {");
+  console.log(` - ${brasilTime}`);
+  console.log(" - " + query, values);
+}
 
 module.exports = {
+  /**
+   * Busca uma ENTERPRISE pelo e-mail
+   */
+  getUserByEmail: (email) => {
+    return new Promise((resolve, reject) => {
+      const query = "SELECT * FROM enterprise WHERE email = ?";
+      const values = [email];
 
-    // listAll: () => {
-    //     return new Promise((resolve, reject)=>{
-    //         query = "SELECT * FROM users ORDER BY id"
+      db.query(query, values, (err, results) => {
+        consoleResult(query, values);
+        if (err) return reject(err);
+        resolve(results && results.length > 0 ? results[0] : false);
+      });
+    });
+  },
 
-    //         db.query(query, (error, results)=>{
-    //             if(error) {reject(error); return}
-    //             resolve(results)
-    //         })
+  /**
+   * Registra uma nova ENTERPRISE
+   */
+  register: (nome, unit, email, pass, cnpj) => {
+    return new Promise((resolve, reject) => {
+      // Verifica existência prévia
+      let query = "SELECT * FROM enterprise WHERE email = ? OR cnpj = ?";
+      let values = [email, cnpj];
 
-    //         consoleResult(query)
-    //     })
-    // },
+      db.query(query, values, (err, results) => {
+        consoleResult(query, values);
+        if (err) return reject(err);
 
+        if (results && results.length > 0) {
+          // Já existe ENTERPRISE com mesmo e-mail ou cnpj
+          return resolve({
+            code: "2",
+            message: "Email ou cnpj já cadastrado, se necessário redefina a senha"
+          });
+        }
 
+        // Insere nova ENTERPRISE
+        query = "INSERT INTO enterprise (nome, unit, email, pass, cnpj) VALUES (?, ?, ?, ?, ?)";
+        values = [nome, unit, email, pass, cnpj];
 
-    // listOne: (userId) => {
-    //     return new Promise((resolve, reject) => {
-    //         query = `SELECT * FROM users WHERE id = ?`
-    //         values = [userId]
+        db.query(query, values, (err2, insertResult) => {
+          consoleResult(query, values);
+          if (err2) return reject(err2);
+          resolve({
+            code: "1",
+            message: "OK",
+            userId: insertResult.insertId,
+            description: `Created Enterprise: ${nome}`
+          });
+        });
+      });
+    });
+  },
 
-    //         db.query(query, values, (error, results)=>{
-    //             if(error) { reject(error); return; }
-    //             if(results.length > 0){
-    //                 resolve(results[0]);
-    //             }else {
-    //                 resolve(false);
-    //             }
-    //         })
+  /**
+   * Atualiza campos permitidos de uma ENTERPRISE
+   */
+  updateIeById: (enterpriseId, updates) => {
+    return new Promise((resolve, reject) => {
+      const fields = Object.keys(updates);
+      const setClause = fields.map(f => `${f} = ?`).join(", ");
+      const values = fields.map(f => updates[f]).concat(enterpriseId);
+      const query = `UPDATE enterprise SET ${setClause} WHERE id = ?`;
 
-    //         consoleResult(query, values)
-    //     })
-    // },
+      db.query(query, values, (err, results) => {
+        consoleResult(query, values);
+        if (err) return reject(err);
+        resolve(results);
+      });
+    });
+  },
 
+  /**
+   * Gera e salva token de reset de senha
+   */
+  saveResetToken: (userId, token, expiresAt) => {
+    return new Promise((resolve, reject) => {
+      const query = `
+        INSERT INTO password_resets (user_id, user_type, token, expires_at)
+        VALUES (?, 'enterprise', ?, ?)`;
+      const values = [userId, token, expiresAt];
 
+      db.query(query, values, (err, results) => {
+        consoleResult(query, values);
+        if (err) return reject(err);
+        resolve(results);
+      });
+    });
+  },
 
-    register: (name, last_name, email, birth, pass, cpf, cep, city) => {
-        return new Promise((resolve, reject) => {
-            // let querySelect = " SELECT * FROM users WHERE username = '?' OR email  = '?' OR cpf    = '?'"
-            let querySelect = ""
+  /**
+   * Busca token de reset válido
+   */
+  findResetToken: (token) => {
+    return new Promise((resolve, reject) => {
+      const query = `
+        SELECT * FROM password_resets
+        WHERE token = ? AND user_type = 'enterprise' AND used = FALSE AND expires_at > NOW()`;
+      const values = [token];
 
-            querySelect += ` SELECT * `
-            querySelect += ` FROM student `
-            querySelect += ` WHERE `
-            querySelect += `    email    = ? `
-            querySelect += `    OR cpf      = ? `
-            let valueSelect = [email, cpf]
+      db.query(query, values, (err, results) => {
+        consoleResult(query, values);
+        if (err) return reject(err);
+        resolve(results && results.length > 0 ? results[0] : false);
+      });
+    });
+  },
 
-            db.query(querySelect, valueSelect, (error, results) => {
+  /**
+   * Marca token de reset como usado
+   */
+  markTokenAsUsed: (tokenId) => {
+    return new Promise((resolve, reject) => {
+      const query = "UPDATE password_resets SET used = TRUE WHERE id = ?";
+      const values = [tokenId];
 
-                if (results.length == 0) {
-                    query = `INSERT INTO student (name,last_name,email,birth,pass,cpf,cep,city) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
-                    values = [name, last_name, email, birth, pass, cpf, cep, city]
+      db.query(query, values, (err, results) => {
+        consoleResult(query, values);
+        if (err) return reject(err);
+        resolve(results);
+      });
+    });
+  },
 
-                    db.query(query, values, (error, results) => {
-                        if (error) {
-                            reject(error)
-                            return
-                        }
-                        returnQry = ["1", "OK", `Created student: ${name}`]
-                        returnCode = ""
-                        consoleResult()
-                        resolve(returnQry)
-                        // resolve(results.insertId)
-                    })
-                } else {
-                    // returnQry = `There is already a user with a name = ${username}`
-                    returnQry = ["2", "Fail", "User not inserted"]
-                    consoleResult()
-                    resolve(returnQry)
-                }
+  /**
+   * Atualiza a senha da ENTERPRISE
+   */
+  updatePassword: (userId, newPasswordHash) => {
+    return new Promise((resolve, reject) => {
+      const query = "UPDATE enterprise SET pass = ? WHERE id = ?";
+      const values = [newPasswordHash, userId];
 
-            })
-        })
-    },
+      db.query(query, values, (err, results) => {
+        consoleResult(query, values);
+        if (err) return reject(err);
+        resolve(results);
+      });
+    });
+  },
 
+  /**
+   * Gera e salva token de ativação
+   */
+  saveActivationToken: (userId, token, expiresAt) => {
+    return new Promise((resolve, reject) => {
+      const query = `
+        INSERT INTO activation_tokens (user_id, user_type, token, expires_at)
+        VALUES (?, 'enterprise', ?, ?)`;
+      const values = [userId, token, expiresAt];
 
+      db.query(query, values, (err, results) => {
+        consoleResult(query, values);
+        if (err) return reject(err);
+        resolve(results);
+      });
+    });
+  },
 
-    // update: (clientId, clientName, clientEmail, clientAddress) => {
-    //     return new Promise((resolve, reject) => {
-    //         let query = 'UPDATE client SET ';
+  /**
+   * Busca token de ativação válido
+   */
+  findActivationToken: (token) => {
+    return new Promise((resolve, reject) => {
+      const query = `
+        SELECT * FROM activation_tokens
+        WHERE token = ? AND user_type = 'enterprise' AND used = FALSE AND expires_at > NOW()`;
+      const values = [token];
 
-    //         const updateFields = [];
+      db.query(query, values, (err, results) => {
+        consoleResult(query, values);
+        if (err) return reject(err);
+        resolve(results && results.length > 0 ? results[0] : false);
+      });
+    });
+  },
 
-    //         if (clientName) { updateFields.push(`name="${clientName}"`) }
+  /**
+   * Marca token de ativação como usado
+   */
+  markActivationTokenAsUsed: (tokenId) => {
+    return new Promise((resolve, reject) => {
+      const query = "UPDATE activation_tokens SET used = TRUE WHERE id = ?";
+      const values = [tokenId];
 
-    //         if (clientEmail) { updateFields.push(`email="${clientEmail}"`) }
+      db.query(query, values, (err, results) => {
+        consoleResult(query, values);
+        if (err) return reject(err);
+        resolve(results);
+      });
+    });
+  },
 
-    //         if (clientAddress) { updateFields.push(`address="${clientAddress}"`) }
+  /**
+   * Ativa a ENTERPRISE após confirmação de e-mail
+   */
+  activateEnterpriseById: (id) => {
+    return new Promise((resolve, reject) => {
+      const query = "UPDATE enterprise SET is_active = TRUE WHERE id = ?";
+      const values = [id];
 
-    //         if (updateFields.length === 0) {
-    //             reject(new Error('Nenhum campo válido para atualização fornecido.'));
-    //             return;
-    //         }
-
-    //         query += updateFields.join(', ');
-    //         query += ` WHERE client_id = "${clientId}"`;
-
-    //         db.query(query, (error, results) => {
-    //             if (error) {
-    //                 reject(error);
-    //                 return;
-    //             }
-
-    //             resolve(results);
-    //         });
-    //         consoleResult(query)
-    //     });
-
-
-    // },
-
-
-
-    // delete: (clientId) =>{
-    //     return new Promise((resolve, reject) => {
-    //         let querySelect = `SELECT * FROM client WHERE client_id = ?`
-    //         let values = [clientId]
-
-    //         db.query(querySelect, values, (error, results) => {
-    //             resolve(results)
-
-    //             if(results != 0){
-    //                 // query = `DELETE FROM client WHERE client_id = ${clientId}`
-    //                 query = `DELETE FROM client WHERE client_id = ${clientId}`
-
-    //                 db.query(query,(error, results) => {
-    //                     if(error) { reject(error); return; }
-    //                     resolve(results)
-    //                 })
-
-    //                 // returnQry = `Deleted client with client_id = ${clientId}`
-    //                 // resolve(returnQry)
-    //                 resolve(query)
-    //                 consoleResult(query)
-    //             } else {
-    //                 returnQry = `No client found with client_id = ${clientId}`
-    //                 reject(returnQry)
-    //                 consoleResult(returnQry)
-    //             }
-    //         })
-
-    //     })
-    // },
-
-}
-
-function consoleResult() {
-    let date = new Date()
-    const brasilTime = date.toLocaleString('pt-BR', { timeZone: 'America/Recife' });
-
-    console.log(`Consult {`)
-    console.log(` - ${brasilTime}`)
-    console.log(" - " + query, values)
-
-}
+      db.query(query, values, (err, results) => {
+        consoleResult(query, values);
+        if (err) return reject(err);
+        resolve(results);
+      });
+    });
+  }
+};
