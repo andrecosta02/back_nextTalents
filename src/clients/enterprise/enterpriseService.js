@@ -70,7 +70,7 @@ module.exports = {
   /**
    * Atualiza campos permitidos de uma ENTERPRISE
    */
-  updateIeById: (enterpriseId, updates) => {
+  updateEnterpriseById: (enterpriseId, updates) => {
     return new Promise((resolve, reject) => {
       const fields = Object.keys(updates);
       const setClause = fields.map(f => `${f} = ?`).join(", ");

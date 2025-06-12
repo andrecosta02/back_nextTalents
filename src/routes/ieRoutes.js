@@ -11,4 +11,5 @@ router.put('/update', authMiddleware, ieController.update);  // Update - Aluno
 router.post("/forgot-pass", ieController.forgotPass)  // Esqueci senha - Aluno
 router.post("/reset-pass", ieController.resetPass)  // Resetar senha - Aluno
 
+
 module.exports = router

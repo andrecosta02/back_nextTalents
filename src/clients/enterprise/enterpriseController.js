@@ -1,4 +1,4 @@
-const ieService = require("./ieService");
+const enterpriseService = require("./enterpriseService");
 const { validationResult, body } = require('express-validator');
 const clientEmail = require("../../clientEmail.js");
 const htmlEmail = require("./htmlEmail.js");
@@ -22,7 +22,7 @@ module.exports = {
     }
 
     try {
-      const enterprise = await ieService.getUserByEmail(email);
+      const enterprise = await enterpriseService.getUserByEmail(email);
 
       if (!enterprise) {
         return res.status(401).json({
@@ -114,7 +114,7 @@ module.exports = {
     }
 
     hash_psw = await bcrypt.hash(pass, saltRounds);
-    const returnQry = await ieService.register(nome, unit, email, hash_psw, cnpj);
+    const returnQry = await enterpriseService.register(nome, unit, email, hash_psw, cnpj);
     const codeReturn = returnQry.code;
 
     if (codeReturn === "1") {
@@ -129,7 +129,7 @@ module.exports = {
       );
       const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
-      await ieService.saveActivationToken(returnQry.userId, token, expiresAt);
+      await enterpriseService.saveActivationToken(returnQry.userId, token, expiresAt);
 
       const emailTitle = "Confirmação de Cadastro - Next Talents";
       const htmlEnv = await htmlEmail.confirmEmail(nome, token);
@@ -146,9 +146,9 @@ module.exports = {
     }
   },
 
-  // UPDATE IE
+  // UPDATE Empresa
   update: async (req, res) => {
-    const ieId = req.user.id;
+    const enterpriseId = req.user.id;
     const allowedFields = ["nome", "unit", "email", "cnpj", "notification_email", "darkmode", "is_active"];
     const updates = {};
     allowedFields.forEach(field => {
@@ -160,7 +160,7 @@ module.exports = {
       return res.status(400).json({ message: "Nenhum campo válido para atualizar." });
     }
     try {
-      const result = await ieService.updateIeById(ieId, updates);
+      const result = await enterpriseService.updateEnterpriseById(enterpriseId, updates);
       return res.status(200).json({ message: "Dados atualizados com sucesso!", result });
     } catch (error) {
       console.error("Erro ao atualizar dados:", error);
@@ -171,13 +171,13 @@ module.exports = {
   // FORGOT PASSWORD
   forgotPass: async (req, res) => {
     const { email } = req.body;
-    const enterprise = await ieService.getUserByEmail(email);
+    const enterprise = await enterpriseService.getUserByEmail(email);
     if (!enterprise) {
       return res.status(200).json({ message: "If this email exists, a reset link has been sent." });
     }
     const token = jwt.sign({ id: enterprise.id, type: 'enterprise' }, SECRET, { expiresIn: '1h' });
     const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
-    await ieService.saveResetToken(enterprise.id, token, expiresAt);
+    await enterpriseService.saveResetToken(enterprise.id, token, expiresAt);
     const emailTitle = "Recuperação de senha Next Talents";
     const htmlEnv = await htmlEmail.resetPass(enterprise.nome, token);
     await clientEmail.envEmail(email, emailTitle, '', htmlEnv);
@@ -189,13 +189,13 @@ module.exports = {
     const { token, newPassword } = req.body;
     try {
       const decoded = jwt.verify(token, SECRET);
-      const tokenData = await ieService.findResetToken(token);
+      const tokenData = await enterpriseService.findResetToken(token);
       if (!tokenData) {
         return res.status(400).json({ message: "Invalid or expired token." });
       }
       const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
-      await ieService.updatePassword(tokenData.user_id, hashedPassword);
-      await ieService.markTokenAsUsed(tokenData.id);
+      await enterpriseService.updatePassword(tokenData.user_id, hashedPassword);
+      await enterpriseService.markTokenAsUsed(tokenData.id);
       return res.status(200).json({ message: "Password updated successfully!" });
     } catch (error) {
       return res.status(400).json({ message: "Invalid or expired token." });
@@ -210,12 +210,12 @@ module.exports = {
     }
     try {
       const decoded = jwt.verify(token, SECRET);
-      const tokenData = await ieService.findActivationToken(token);
+      const tokenData = await enterpriseService.findActivationToken(token);
       if (!tokenData) {
         return res.status(400).json({ message: "Token inválido ou expirado." });
       }
-      await ieService.activateIeById(tokenData.user_id);
-      await ieService.markActivationTokenAsUsed(tokenData.id);
+      await enterpriseService.activateEnterpriseById(tokenData.user_id);
+      await enterpriseService.markActivationTokenAsUsed(tokenData.id);
       return res.status(200).json({ message: "Cadastro ativado com sucesso!" });
     } catch (error) {
       console.error("Erro na ativação de cadastro:", error);
