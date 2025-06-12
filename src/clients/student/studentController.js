@@ -140,16 +140,16 @@ module.exports = {
                 .isEmail().withMessage('O e-mail deve ser um endereço de e-mail válido')
                 .isLength({ min: 3, max: 60 }).withMessage('O e-mail deve ter entre 3 e 60 caracteres'),
         
-            body('birth')
-                .notEmpty().withMessage('A data de nascimento não pode estar vazia')
-                .isString().withMessage('A data de nascimento deve ser string')
-                .matches(/^\d{8}$/).withMessage('A data de nascimento deve estar no formato AAAAMMDD')
-                .custom((value) => {
-                    if (isAdult(value) < 18) {
-                        throw new Error('O usuário deve ter pelo menos 18 anos');
-                    }
-                    return true;
-                }),
+            // body('birth')
+            //     .notEmpty().withMessage('A data de nascimento não pode estar vazia')
+            //     .isString().withMessage('A data de nascimento deve ser string')
+            //     .matches(/^\d{8}$/).withMessage('A data de nascimento deve estar no formato AAAAMMDD')
+            //     .custom((value) => {
+            //         if (isAdult(value) < 18) {
+            //             throw new Error('O usuário deve ter pelo menos 18 anos');
+            //         }
+            //         return true;
+            //     }),
         
             // body('pass')
             //     .notEmpty().withMessage('A senha não pode estar vazia')
