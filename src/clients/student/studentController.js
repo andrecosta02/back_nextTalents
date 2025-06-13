@@ -7,15 +7,16 @@ const bcrypt = require('bcrypt');
 const saltRounds = 10;
 const jwt = require('jsonwebtoken');
 const SECRET = "weexpedition"; // Use o mesmo que você usa para gerar os outros tokens
+const table = "student"
 
 const date = new Date()
 const fullDate = `${date.getFullYear()}${(date.getMonth() + 1).toString().padStart(2, '0')}${date.getDate().toString().padStart(2, '0')}`
 
 module.exports = {
 
-    listActiveStudents: async (req, res, next) => {
+    listActive: async (req, res, next) => {
         try {
-        const alunos = await registerService.getActiveStudents(); 
+        const alunos = await registerService.getActive(); 
         // já vêm no formato correto: name, last_name, email, birth, cep, city, description
         return res.status(200).json(alunos);
         } catch (err) {
@@ -92,7 +93,7 @@ module.exports = {
                 // return res.status(403).json({ message: "Conta não ativada. Verifique seu e-mail para confirmar o cadastro." });
             }
 
-            const token = jwt.sign({ id: user.id, name: user.name, type: "student" }, SECRET, { expiresIn: "2h" });
+            const token = jwt.sign({ id: user.id, name: user.name, type: table }, SECRET, { expiresIn: "2h" });
 
             res.status(200).json({
                 message: "Login realizado com sucesso!",
@@ -206,7 +207,7 @@ module.exports = {
             json.result = returnQry.description;  // <- agora pega a descrição certa
 
             // Gerar token de ativação
-            const token = jwt.sign({ id: returnQry.userId, type: "student" }, SECRET, { expiresIn: "24h" });
+            const token = jwt.sign({ id: returnQry.userId, type: table }, SECRET, { expiresIn: "24h" });
             const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 horas
         
             await registerService.saveActivationToken(returnQry.userId, token, expiresAt);
@@ -248,7 +249,7 @@ module.exports = {
         }
 
         try {
-            const result = await registerService.updateStudentById(userId, updates);
+            const result = await registerService.updateById(userId, updates);
             res.status(200).json({ message: "Dados atualizados com sucesso!", result });
         } catch (error) {
             console.error("Erro ao atualizar dados:", error);
@@ -265,7 +266,7 @@ module.exports = {
         }
     
         const token = jwt.sign(
-            { id: user.id, type: 'student' },
+            { id: user.id, type: table },
             SECRET,
             { expiresIn: '1h' }
         );
@@ -322,7 +323,7 @@ module.exports = {
             }
     
             // Ativando o usuário
-            await registerService.activateStudentById(tokenData.user_id);
+            await registerService.activateById(tokenData.user_id);
             await registerService.markActivationTokenAsUsed(tokenData.id);
     
             res.status(200).json({ message: "Cadastro ativado com sucesso!" });

@@ -14,6 +14,7 @@ connection.connect((error) => {
         return
     } else {
         console.log(`Conectado com o Banco de Dados: ${process.env.DB_NAME}`)
+        connection.query("SET time_zone = 'America/Sao_Paulo'");
     }
 })
 
