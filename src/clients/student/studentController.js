@@ -15,8 +15,13 @@ const fullDate = `${date.getFullYear()}${(date.getMonth() + 1).toString().padSta
 module.exports = {
 
     listActive: async (req, res, next) => {
+        const authHeader = req.headers['authorization'];
+        const token = authHeader && authHeader.split(' ')[1];
+        const decoded = jwt.verify(token, SECRET);
+        const id_ie = decoded.id
+
         try {
-        const alunos = await registerService.getActive(); 
+        const alunos = await registerService.getActive(id_ie); 
         // já vêm no formato correto: name, last_name, email, birth, cep, city, description
         return res.status(200).json(alunos);
         } catch (err) {
@@ -108,20 +113,25 @@ module.exports = {
     register: async (req, res) => {
         const json = { statusCode: "", message: "", result: [] }
         // const htmlEnv = require("./htmlConfirmEmail.js")
+        const authHeader = req.headers['authorization'];
+        const token = authHeader && authHeader.split(' ')[1];
+        const decoded = jwt.verify(token, SECRET);
+
 
         let hash_psw = ""
 
         const name = req.body.name
         const last_name = req.body.last_name
         const email = req.body.email
-        // const birth = req.body.birth
-        const birth = "20000101" // Data de nascimento fixa para testes, no formato AAAAMMDD
+        const birth = req.body.birth
+        // const birth = "20000101" // Data de nascimento fixa para testes, no formato AAAAMMDD
         // const pass = req.body.pass
         const pass = "1234"
         const cpf = req.body.cpf
         const cep = req.body.cep
         const city = req.body.city
         const description = req.body.description
+        const id_ie = decoded.id
 
         json.result = [name, last_name, email, birth, pass, cpf, cep, city, description]
 
@@ -142,16 +152,16 @@ module.exports = {
                 .isEmail().withMessage('O e-mail deve ser um endereço de e-mail válido')
                 .isLength({ min: 3, max: 60 }).withMessage('O e-mail deve ter entre 3 e 60 caracteres'),
         
-            // body('birth')
-            //     .notEmpty().withMessage('A data de nascimento não pode estar vazia')
-            //     .isString().withMessage('A data de nascimento deve ser string')
-            //     .matches(/^\d{8}$/).withMessage('A data de nascimento deve estar no formato AAAAMMDD')
-            //     .custom((value) => {
-            //         if (isAdult(value) < 18) {
-            //             throw new Error('O usuário deve ter pelo menos 18 anos');
-            //         }
-            //         return true;
-            //     }),
+            body('birth')
+                .notEmpty().withMessage('A data de nascimento não pode estar vazia')
+                .isString().withMessage('A data de nascimento deve ser string')
+                .matches(/^\d{8}$/).withMessage('A data de nascimento deve estar no formato AAAAMMDD')
+                .custom((value) => {
+                    if (isAdult(value) < 18) {
+                        throw new Error('O usuário deve ter pelo menos 18 anos');
+                    }
+                    return true;
+                }),
         
             // body('pass')
             //     .notEmpty().withMessage('A senha não pode estar vazia')
@@ -197,7 +207,7 @@ module.exports = {
             // console.log(hash_psw)
         }
 
-        const returnQry = await registerService.register(name, last_name, email, birth, hash_psw, cpf, cep, city, description);
+        const returnQry = await registerService.register(name, last_name, email, birth, hash_psw, cpf, cep, city, description, id_ie);
         const codeReturn = returnQry.code; // 1 = OK, 2 = User Not Found
 
         if (codeReturn == "1") {
@@ -212,7 +222,7 @@ module.exports = {
         
             await registerService.saveActivationToken(returnQry.userId, token, expiresAt);
             
-            const emailTitle = "Recuperação de senha Next Talents";
+            const emailTitle = "Bem vindo à NextTalents!! Confirmação de cadastro";
             fullName = `${name} ${last_name}`
             htmlEnv = await htmlEmail.confirmEmail(fullName, token)
 
@@ -234,9 +244,10 @@ module.exports = {
     },
 
     update: async (req, res) => {
-        const userId = req.user.id; // Pegando o id do usuário autenticado via middleware
-        const allowedFields = ["name", "last_name", "email", "cep", "city", "description", "notification_email", "notification_vacancies", "notification_course", "darkmode"];
+        // const userId = req.user.id; // Pegando o id do usuário autenticado via middleware
+        const allowedFields = ["name", "last_name", "cep", "city", "description", "notification_email", "notification_vacancies", "notification_course", "darkmode"];
         const updates = {};
+        const userId = req.params.id
 
         allowedFields.forEach(field => {
             if (req.body[field] !== undefined) {
@@ -250,7 +261,19 @@ module.exports = {
 
         try {
             const result = await registerService.updateById(userId, updates);
-            res.status(200).json({ message: "Dados atualizados com sucesso!", result });
+            res.status(202).json({ message: "Dados atualizados com sucesso!", result });
+        } catch (error) {
+            console.error("Erro ao atualizar dados:", error);
+            res.status(500).json({ message: "Erro interno no servidor." });
+        }
+    },
+
+    delete: async (req, res) => {
+        const userId = req.params.id
+
+        try {
+            const result = await registerService.delete(userId);
+            res.status(202).json({ message: "Aluno deletado com sucesso!", result });
         } catch (error) {
             console.error("Erro ao atualizar dados:", error);
             res.status(500).json({ message: "Erro interno no servidor." });

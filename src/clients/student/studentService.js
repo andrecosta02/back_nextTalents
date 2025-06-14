@@ -25,12 +25,13 @@ module.exports = {
         });
     },
 
-    getActive: () => {
+    getActive: (id_ie) => {
         return new Promise((resolve, reject) => {
             query = `
                 SELECT id, name, last_name, cpf, email, birth, cep, city, description
                 FROM ${table}
                 WHERE is_active = 1
+                AND id_ie = ${id_ie}
             `;
             values = [];
             db.query(query, values, (error, results) => {
@@ -43,15 +44,15 @@ module.exports = {
         });
     },
 
-    register: (name, last_name, email, birth, pass, cpf, cep, city, description) => {
+    register: (name, last_name, email, birth, pass, cpf, cep, city, description, id_ie) => {
         return new Promise((resolve, reject) => {
             let querySelect = `SELECT * FROM ${table} WHERE email = ? OR cpf = ?`;
             let valueSelect = [email, cpf];
 
             db.query(querySelect, valueSelect, (error, results) => {
                 if (results.length == 0) {
-                    query = `INSERT INTO ${table} (name, last_name, email, birth, pass, cpf, cep, city, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-                    values = [name, last_name, email, birth, pass, cpf, cep, city, description];
+                    query = `INSERT INTO ${table} (name, last_name, email, birth, pass, cpf, cep, city, description, id_ie) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+                    values = [name, last_name, email, birth, pass, cpf, cep, city, description, id_ie];
 
                     db.query(query, values, (error, results) => {
                         if (error) {
@@ -68,7 +69,7 @@ module.exports = {
                         resolve(returnQry);
                     });
                 } else {
-                    returnQry = ["2", "Email ou CPF já cadastrado, se necessário, redefina a senha"];
+                    returnQry = ["2", "Email ou CPF já cadastrado."];
                     consoleResult();
                     resolve(returnQry);
                 }
@@ -83,6 +84,24 @@ module.exports = {
             const values = fields.map(field => updates[field]);
 
             query = `UPDATE ${table} SET ${setClause} WHERE id = ?`;
+            values.push(userId);
+
+            db.query(query, values, (error, results) => {
+                if (error) {
+                    reject(error);
+                    return;
+                }
+                consoleResult(query, values);
+                resolve(results);
+            });
+        });
+    },
+
+    delete: (userId) => {
+        return new Promise((resolve, reject) => {
+            const values = []
+
+            query = `DELETE FROM ${table} WHERE id = ?`;
             values.push(userId);
 
             db.query(query, values, (error, results) => {
