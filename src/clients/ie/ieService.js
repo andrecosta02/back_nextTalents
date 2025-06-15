@@ -43,6 +43,24 @@ module.exports = {
         });
     },
 
+    getOne: (id) => {
+        return new Promise((resolve, reject) => {
+            query = `
+                SELECT id, nome, unit, email, pass, cnpj, notification_email, darkmode
+                FROM ${table}
+                WHERE id = ?
+            `;
+            values = [id];
+            db.query(query, values, (error, results) => {
+                if (error) {
+                return reject(error);
+                }
+                consoleResult();
+                resolve(results);
+            });
+        });
+    },
+
     register: (nome, unit, email, pass, cnpj) => {
         return new Promise((resolve, reject) => {
             let querySelect = `SELECT * FROM ${table} WHERE email = ? OR cnpj = ?`;

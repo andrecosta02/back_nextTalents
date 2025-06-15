@@ -26,6 +26,19 @@ module.exports = {
         }
     },
 
+    getOne: async (req, res, next) => {
+        const userId = req.user.id; // Pegando o id do usuário autenticado via middleware
+        try {
+        const regs = await registerService.getOne(userId); 
+        // já vêm no formato correto: id, nome, unit, email, pass, cnpj, notification_email, darkmode
+        return res.status(200).json(regs);
+      } catch (err) {
+        console.log("Error: ", err)
+        next(err);
+        return res.status(402).json();
+        }
+    },
+
     login: async (req, res) => {
         const { email, pass } = req.body;
         const json = { statusCode: "", message: "", result: [] }
