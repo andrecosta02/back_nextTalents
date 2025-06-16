@@ -208,7 +208,7 @@ module.exports = {
 
     update: async (req, res) => {
         const userId = req.user.id; // Pegando o id do usuário autenticado via middleware
-        const allowedFields = ["nome", "unit", "email", "cnpj", "notification_email", "darkmode", "is_active"];
+        const allowedFields = ["nome", "unit", "email", "fone", "notification_email", "darkmode", "country", "city", "uf"];
         const updates = {};
 
         allowedFields.forEach(field => {

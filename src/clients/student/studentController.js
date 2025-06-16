@@ -14,14 +14,25 @@ const fullDate = `${date.getFullYear()}${(date.getMonth() + 1).toString().padSta
 
 module.exports = {
 
-    listActive: async (req, res, next) => {
+    listForIe: async (req, res, next) => {
         const authHeader = req.headers['authorization'];
         const token = authHeader && authHeader.split(' ')[1];
         const decoded = jwt.verify(token, SECRET);
         const id_ie = decoded.id
 
         try {
-        const alunos = await registerService.getActive(id_ie); 
+        const alunos = await registerService.getActiveForIe(id_ie); 
+        // já vêm no formato correto: name, last_name, email, birth, cep, city, description
+        return res.status(200).json(alunos);
+        } catch (err) {
+        next(err);
+        }
+    },
+
+    listAll: async (req, res, next) => {
+
+        try {
+        const alunos = await registerService.getActiveAll(); 
         // já vêm no formato correto: name, last_name, email, birth, cep, city, description
         return res.status(200).json(alunos);
         } catch (err) {

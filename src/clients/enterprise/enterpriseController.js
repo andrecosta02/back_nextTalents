@@ -26,6 +26,19 @@ module.exports = {
         }
     },
 
+    getOne: async (req, res, next) => {
+        const userId = req.user.id; // Pegando o id do usuário autenticado via middleware
+        try {
+        const regs = await registerService.getOne(userId); 
+        // já vêm no formato correto: id, nome, unit, email, pass, cnpj, notification_email, darkmode
+        return res.status(200).json(regs);
+      } catch (err) {
+        console.log("Error: ", err)
+        next(err);
+        return res.status(402).json();
+        }
+    },
+
     login: async (req, res) => {
         const { email, pass } = req.body;
         const json = { statusCode: "", message: "", result: [] }
@@ -99,7 +112,8 @@ module.exports = {
 
             res.status(200).json({
                 message: "Login realizado com sucesso!",
-                token: token
+                token: token,
+                name: user.nome
             });
         } catch (error) {
             console.error("Erro no login:", error);
@@ -195,7 +209,8 @@ module.exports = {
 
     update: async (req, res) => {
         const userId = req.user.id; // Pegando o id do usuário autenticado via middleware
-        const allowedFields = ["nome", "unit", "email", "cnpj", "notification_email", "darkmode", "is_active"];
+        // const allowedFields = ["nome", "unit", "email", "cnpj", "notification_email", "darkmode", "is_active"];
+        const allowedFields = ["nome", "unit", "email", "fone", "notification_email", "darkmode", "country", "city", "uf"];
         const updates = {};
 
         allowedFields.forEach(field => {

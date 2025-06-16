@@ -6,6 +6,7 @@ const authMiddleware = require("../clients/auth/authMiddleware.js")  // Middlewa
 
 router.post("/login", enterpriseController.login)  // Login - Aluno
 // router.get("/list",  authMiddleware, enterpriseController.listActive)  // Listar alunos ativos
+router.get("/listOne", authMiddleware,  enterpriseController.getOne)  // Listar alunos ativos
 router.get("/list",   enterpriseController.listActive)  // Listar alunos ativos
 router.post("/register", enterpriseController.register)  // Registro - Aluno
 router.post("/confirm-email", enterpriseController.confirmEmail); // Confirmação de e-mail - Aluno

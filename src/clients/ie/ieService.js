@@ -28,7 +28,7 @@ module.exports = {
     getActive: () => {
         return new Promise((resolve, reject) => {
             query = `
-                SELECT nome, unit, email, cnpj
+                SELECT nome, unit, email, fone, cnpj, country, city, uf
                 FROM ${table}
                 WHERE is_active = 1
             `;

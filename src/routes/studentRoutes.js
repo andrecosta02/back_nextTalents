@@ -5,7 +5,8 @@ const studentController = require("../clients/student/studentController.js")
 const authMiddleware = require("../clients/auth/authMiddleware.js")  // Middleware de autenticação
 
 router.post("/login", studentController.login)  // Login - Aluno
-router.get("/list",  authMiddleware, studentController.listActive)  // Listar alunos ativos
+router.get("/listFoIe",  authMiddleware, studentController.listForIe)  // Listar alunos ativos
+router.get("/listAll",  authMiddleware, studentController.listAll)  // Listar alunos ativos
 router.post("/register", authMiddleware, studentController.register)  // Registro - Aluno
 router.post("/confirm-email", studentController.confirmEmail); // Confirmação de e-mail - Aluno
 router.put('/update/:id', authMiddleware, studentController.update);  // Update - Aluno

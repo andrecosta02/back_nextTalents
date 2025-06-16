@@ -25,13 +25,33 @@ module.exports = {
         });
     },
 
-    getActive: (id_ie) => {
+    getActiveForIe: (id_ie) => {
         return new Promise((resolve, reject) => {
             query = `
                 SELECT id, name, last_name, cpf, email, fone, curso, birth, cep, city, uf, country, description
                 FROM ${table}
                 WHERE is_active = 1
                 AND id_ie = ${id_ie}
+            `;
+            values = [];
+            db.query(query, values, (error, results) => {
+                if (error) {
+                return reject(error);
+                }
+                consoleResult();
+                resolve(results);
+            });
+        });
+    },
+
+    getActiveAll: () => {
+        return new Promise((resolve, reject) => {
+            query = `
+                SELECT student.id, student.name, student.last_name, student.cpf, student.email, student.fone, student.curso, student.birth, student.cep, student.city, student.uf, student.country, student.description, ie.nome AS name_ie
+                FROM ${table}
+                INNER JOIN ie
+                on ie.id = student.id_ie
+                WHERE student.is_active = 1
             `;
             values = [];
             db.query(query, values, (error, results) => {
