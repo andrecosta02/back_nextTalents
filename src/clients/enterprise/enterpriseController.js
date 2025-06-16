@@ -113,7 +113,7 @@ module.exports = {
             res.status(200).json({
                 message: "Login realizado com sucesso!",
                 token: token,
-                name: user.nome
+                nome: user.nome
             });
         } catch (error) {
             console.error("Erro no login:", error);
