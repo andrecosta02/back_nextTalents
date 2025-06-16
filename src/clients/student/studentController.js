@@ -123,17 +123,20 @@ module.exports = {
         const name = req.body.name
         const last_name = req.body.last_name
         const email = req.body.email
+        const fone = req.body.fone
+        const curso = req.body.curso
         const birth = req.body.birth
-        // const birth = "20000101" // Data de nascimento fixa para testes, no formato AAAAMMDD
         // const pass = req.body.pass
         const pass = "1234"
         const cpf = req.body.cpf
         const cep = req.body.cep
         const city = req.body.city
+        const uf = req.body.uf
+        const country = req.body.country
         const description = req.body.description
         const id_ie = decoded.id
 
-        json.result = [name, last_name, email, birth, pass, cpf, cep, city, description]
+        json.result = [name, last_name, email, fone, curso, birth, pass, cpf, cep, city, uf, country, description]
 
         const registerValidation = [
             body('name')
@@ -151,7 +154,17 @@ module.exports = {
                 .isString().withMessage('O e-mail deve ser string')
                 .isEmail().withMessage('O e-mail deve ser um endereço de e-mail válido')
                 .isLength({ min: 3, max: 60 }).withMessage('O e-mail deve ter entre 3 e 60 caracteres'),
-        
+
+            body('fone')
+                .notEmpty().withMessage('O telefone não pode estar vazio')
+                .isString().withMessage('O telefone deve ser string')
+                .isLength({ min: 3, max: 20 }).withMessage('O telefone deve ter entre 3 e 20 caracteres'),
+
+            body('curso')
+                .notEmpty().withMessage('O curso não pode estar vazio')
+                .isString().withMessage('O curso deve ser string')
+                .isLength({ min: 3, max: 100 }).withMessage('O curso deve ter entre 3 e 100 caracteres'),
+
             body('birth')
                 .notEmpty().withMessage('A data de nascimento não pode estar vazia')
                 .isString().withMessage('A data de nascimento deve ser string')
@@ -180,11 +193,23 @@ module.exports = {
                 .isString().withMessage('O CEP deve ser string')
                 .isLength({ min: 8, max: 8 }).withMessage('O CEP deve conter exatamente 8 caracteres')
                 .matches(/^\d+$/).withMessage('O CEP deve conter apenas números'),
-        
+                
             body('city')
                 .notEmpty().withMessage('A cidade é obrigatória')
                 .isString().withMessage('O nome deve ser string')
                 .isLength({ min: 2, max: 100 }).withMessage('A cidade deve ter entre 2 e 100 caracteres'),
+                // .matches(/^[a-zA-Z\s]+$/).withMessage('A cidade deve conter apenas letras e espaços'),
+
+            body('uf')
+                .notEmpty().withMessage('O estado é obrigatório')
+                .isString().withMessage('O estado deve ser string')
+                .isLength({ min: 2, max: 2 }).withMessage('O estado deve conter 2 caracteres'),
+                // .matches(/^[a-zA-Z\s]+$/).withMessage('A cidade deve conter apenas letras e espaços'),
+
+            body('country')
+                .notEmpty().withMessage('O pais é obrigatória')
+                .isString().withMessage('O pais deve ser string')
+                .isLength({ min: 2, max: 20 }).withMessage('A pais deve ter entre 2 e 20 caracteres'),
                 // .matches(/^[a-zA-Z\s]+$/).withMessage('A cidade deve conter apenas letras e espaços'),
 
             body('description')
@@ -207,7 +232,7 @@ module.exports = {
             // console.log(hash_psw)
         }
 
-        const returnQry = await registerService.register(name, last_name, email, birth, hash_psw, cpf, cep, city, description, id_ie);
+        const returnQry = await registerService.register(name, last_name, email, fone, curso, birth, hash_psw, cpf, cep, city, uf, country, description, id_ie);
         const codeReturn = returnQry.code; // 1 = OK, 2 = User Not Found
 
         if (codeReturn == "1") {
@@ -245,7 +270,7 @@ module.exports = {
 
     update: async (req, res) => {
         // const userId = req.user.id; // Pegando o id do usuário autenticado via middleware
-        const allowedFields = ["name", "last_name", "cep", "city", "description", "notification_email", "notification_vacancies", "notification_course", "darkmode"];
+        const allowedFields = ["name", "last_name", "fone", "curso", "cep", "city", "uf", "country", "description", "notification_email", "notification_vacancies", "notification_course", "darkmode"];
         const updates = {};
         const userId = req.params.id
 

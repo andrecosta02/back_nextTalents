@@ -2,7 +2,7 @@ module.exports = {
 
     resetPass: (name, token) => {
         return new Promise((resolve, reject) => {
-            let resetLink = `http://localhost:3000/ie/reset-senha?token=${token}`;
+            let resetLink = `http://localhost:3000/empresa/reset-senha?token=${token}`;
             
             let html = `
             <img src="cid:nextTalents.png" alt="Logo Next Talents" style="width: 150px; margin-bottom: 20px;" />
@@ -36,7 +36,7 @@ module.exports = {
 
     confirmEmail: (name, token) => {
         return new Promise((resolve, reject) => {
-            const activationLink = `http://localhost:3000/ie/confirma-email?token=${token}`;
+            const activationLink = `http://localhost:3000/empresa/confirma-email?token=${token}`;
 
             const html = `
               <div style="font-family: Arial, sans-serif; background-color: #f9f9f9; padding: 20px;">

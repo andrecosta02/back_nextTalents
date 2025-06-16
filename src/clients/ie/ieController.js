@@ -17,7 +17,7 @@ module.exports = {
     listActive: async (req, res, next) => {
         try {
         const regs = await registerService.getActive(); 
-        // já vêm no formato correto: name, last_name, email, birth, cep, city, description
+        // já vêm no formato correto: nome, unit, email, cnpj
         return res.status(200).json(regs);
       } catch (err) {
         console.log("Error: ", err)

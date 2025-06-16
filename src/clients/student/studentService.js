@@ -28,7 +28,7 @@ module.exports = {
     getActive: (id_ie) => {
         return new Promise((resolve, reject) => {
             query = `
-                SELECT id, name, last_name, cpf, email, birth, cep, city, description
+                SELECT id, name, last_name, cpf, email, fone, curso, birth, cep, city, uf, country, description
                 FROM ${table}
                 WHERE is_active = 1
                 AND id_ie = ${id_ie}
@@ -44,15 +44,15 @@ module.exports = {
         });
     },
 
-    register: (name, last_name, email, birth, pass, cpf, cep, city, description, id_ie) => {
+    register: (name, last_name, email, fone, curso, birth, pass, cpf, cep, city, uf, country, description, id_ie) => {
         return new Promise((resolve, reject) => {
             let querySelect = `SELECT * FROM ${table} WHERE email = ? OR cpf = ?`;
             let valueSelect = [email, cpf];
 
             db.query(querySelect, valueSelect, (error, results) => {
                 if (results.length == 0) {
-                    query = `INSERT INTO ${table} (name, last_name, email, birth, pass, cpf, cep, city, description, id_ie) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-                    values = [name, last_name, email, birth, pass, cpf, cep, city, description, id_ie];
+                    query = `INSERT INTO ${table} (name, last_name, email, fone, curso, birth, pass, cpf, cep, city, uf, country, description, id_ie) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)`;
+                    values = [name, last_name, email, fone, curso, birth, pass, cpf, cep, city, uf, country, description, id_ie];
 
                     db.query(query, values, (error, results) => {
                         if (error) {
