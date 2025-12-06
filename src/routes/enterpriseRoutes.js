@@ -15,3 +15,4 @@ router.post("/forgot-pass", enterpriseController.forgotPass)  // Esqueci senha -
 router.post("/reset-pass", enterpriseController.resetPass)  // Resetar senha - Aluno
 
 module.exports = router
+

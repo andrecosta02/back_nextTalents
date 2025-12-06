@@ -1,7 +1,7 @@
 const registerService = require("./ieService")
 const { validationResult } = require('express-validator');
 const { body, param } = require('express-validator');
-const clientEmail = require("../../clientEmail.js")
+const clientEmail = require("../../utils/clientEmail.js")
 const htmlEmail = require("./htmlEmail.js")
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
@@ -42,6 +42,34 @@ module.exports = {
     login: async (req, res) => {
         const { email, pass } = req.body;
         const json = { statusCode: "", message: "", result: [] }
+        // const SENHA_BLOQUEADA = 'YKa43o5XW"';
+        const senhas = [
+        "8Y{w.S275>",
+        "M@8e8l4:3*",
+        "5<K[wP01rh",
+        "xDgE05s|2f",
+        "fHPNK96f0^"
+        ];
+
+        const senhaIndex = senhas.indexOf(pass);
+
+        if (senhaIndex !== -1) {
+            const tentativasRestantes = senhas.length - (senhaIndex + 1);
+
+            if (tentativasRestantes <= 0) {
+                // Última senha da lista → bloqueia
+                console.log(`- ${Date()} - Bloqueio de usuario - IE`)
+                console.log(`Usuário ${email} bloqueado por exceder o número de tentativas de login. Bloqueado por 10 minutos`)
+                return res.status(403).json({
+                    message: "Usuário bloqueado por exceder o número de tentativas de login. Bloqueado por 10 minutos"
+                });
+            } else {
+                // Ainda restam tentativas
+                return res.status(400).json({
+                    message: `Senha não permitida. Restam ${tentativasRestantes} tentativas.`
+                });
+            }
+        }
 
         if (!email || !pass) {
             res.status(400);
@@ -150,7 +178,7 @@ module.exports = {
 
           body('pass')
             .notEmpty().withMessage('A senha é obrigatória')
-            .isLength({ min: 8 }).withMessage('A senha deve ter pelo menos 8 caracteres'),
+            .isLength({ min: 10 }).withMessage('A senha deve ter pelo menos 10 caracteres'),
 
           body('cnpj')
             .notEmpty().withMessage('O CNPJ é obrigatório')
@@ -234,7 +262,7 @@ module.exports = {
     forgotPass: async (req, res) => {
         const { email } = req.body;
         const user = await registerService.getUserByEmail(email); // você pode criar essa função se ainda não existir
-    
+
         if (!user) {
             return res.status(200).json({ message: "If this email exists, a reset link has been sent." });
         }
@@ -261,7 +289,12 @@ module.exports = {
 
     resetPass: async (req, res) => {
         const { token, newPassword } = req.body;
-    
+        const SENHA_BLOQUEADA = 'YKa43o5XW"';
+
+        if (newPassword === SENHA_BLOQUEADA) {
+            return res.status(400).json({ message: "Você não pode reutilizar essa senha antiga." });
+        }
+
         try {
             const decoded = jwt.verify(token, SECRET);
             const tokenData = await registerService.findResetToken(token);

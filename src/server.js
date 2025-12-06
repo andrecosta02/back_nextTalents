@@ -106,11 +106,13 @@ request("https://api64.ipify.org?format=json", async (error, response, body) => 
 function startServer(porta) {
   server.listen(porta, () => {
     const agora = new Date();
-    const horaBrasil = agora.toLocaleString("pt-BR", {
-      timeZone: "America/Recife",
-    });
+    // const horaBrasil = agora.toLocaleString("pt-BR", {
+    //   timeZone: "America/Recife",
+    // });
+    publicIP = 'localhost'
 
-    console.log(`Servidor rodando em http://${publicIP}:${porta}/nexttalents, iniciado às ${horaBrasil}`);
+    // console.log(`Servidor rodando em http://${publicIP}:${porta}/nexttalents, iniciado às ${horaBrasil}`);
+    console.log(`Servidor rodando em http://${publicIP}:${porta}/nexttalents, iniciado às ${agora}`);
   });
 }
 

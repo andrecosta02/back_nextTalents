@@ -1,7 +1,7 @@
 const registerService = require("./studentService")
 const { validationResult } = require('express-validator');
 const { body, param } = require('express-validator');
-const clientEmail = require("../../clientEmail.js")
+const clientEmail = require("../../utils/clientEmail.js")
 const htmlEmail = require("./htmlEmail.js")
 const bcrypt = require('bcrypt');
 const saltRounds = 10;

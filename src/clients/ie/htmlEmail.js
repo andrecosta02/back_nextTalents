@@ -8,7 +8,8 @@ module.exports = {
             <img src="cid:nextTalents.png" alt="Logo Next Talents" style="width: 150px; margin-bottom: 20px;" />
             <div style="font-family: Arial, sans-serif; background-color: #f9f9f9; padding: 20px;">
                 <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; padding: 30px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
-                <h2 style="color: #333333;">Olá, ${name}</h2>
+                // <h2 style="color: #333333;">Olá, ${name}</h2>
+                <h2 style="color: #333333;">Olá!</h2>
                 <p style="font-size: 16px; color: #555555;">
                     Recebemos uma solicitação para redefinir sua senha no <strong>Next Talents</strong>.
                 </p>
